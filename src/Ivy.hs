@@ -5,16 +5,16 @@ module Ivy
 where
 import Foreign.C
 import Foreign.Ptr
-
 import Foreign.Storable
-import Control.Concurrent
+import Foreign.Marshal.Array
 import Control.Concurrent.STM
 
---import System.IO (hPutStrLn, stderr)
+import System.IO (hPutStrLn, stderr)
 
 foreign import ccall "IvyStart" ivyStart :: CString -> IO ()
-foreign import ccall "IvyStop" ivyStop :: IO ()
+foreign import ccall "IvyStop" _ivyStop :: IO ()
 foreign import ccall "IvyMainLoop" ivyMainLoop :: IO ()
+foreign import ccall "IvySendMsg" _ivySendMsg :: Ptr CChar -> IO ()
 
 foreign import ccall "IvyInit" 
     ivyInit :: Ptr CChar -> -- application name
@@ -24,7 +24,6 @@ foreign import ccall "IvyInit"
                Ptr a ->
                Ptr a ->
                IO ()
-foreign import ccall "IvySendMsg" ivySendMsg :: Ptr CChar -> IO ()
 
 foreign import ccall "IvyBindMsg"
     ivyBindMsg :: FunPtr ( -- MsgCallback:
@@ -53,25 +52,36 @@ foreign import ccall "wrapper"
 appName :: String
 appName = "Haskell plotter"
 
-ivyMain :: TVar Double -> IO ()
-ivyMain data_var = do
-    --hPutStrLn stderr "TEST"
+-- `data_var` for sharing data
+-- `source_var` is for sharing the sender ID (like AC_ID or for example 'ground')
+-- source is always the first element of the parsed callback data
+-- `expr` is the regular expression used for binding
+-- `index` determines which index holds the data
+ivyMain :: TVar Double -> TVar String -> String -> Int -> IO ()
+ivyMain data_var source_var expr index = do
     app_name <- newCString appName
     ready_msg <- newCString $ appName ++ " ready!"
     ivyInit app_name ready_msg nullPtr nullPtr nullPtr nullPtr
     addr <- newCString ""
     ivyStart addr
-    regexp <- newCString "ground TELEMETRY_STATUS (.*)"
-    cb <- createIvyCb $ myCallback data_var
+    regexp <- newCString expr
+    cb <- createIvyCb $ myCallback data_var source_var index
     ivyBindMsg cb nullPtr regexp
     ivyMainLoop
 
-myCallback:: TVar Double -> Ptr a -> Ptr a -> Int -> Ptr (CString) -> IO ()
-myCallback myVar _ _ _ dataPtr = do
-    val <- peek dataPtr
-    str <- peekCString val
-    --hPutStrLn stderr (last $ splitOn str)
-    atomically $ writeTVar myVar (read (last $ splitOn str) :: Double)
+-- TODO: make this more flexible?
+myCallback:: TVar Double -> TVar String ->
+             Int -> Ptr a -> Ptr a -> Int -> Ptr (CString) -> IO ()
+myCallback datapoint source index _ _ _ dataPtr = do
+    val <- peekArray 2 dataPtr
+    hPutStrLn stderr (show val)
+    src <- peekCString (val !! 0)
+    str <- peekCString (val !! 1)
+    hPutStrLn stderr ("str = " ++ show str)
+    let values = splitOn str
+    hPutStrLn stderr ("values = " ++ concat values)
+    atomically $ writeTVar datapoint (read ( values !! index ) :: Double)
+    atomically $ writeTVar source src
 
 wordsWhen     :: (Char -> Bool) -> String -> [String]
 wordsWhen p s =  case dropWhile p s of
