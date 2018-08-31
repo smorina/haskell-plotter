@@ -5,7 +5,6 @@ module Ivy
 where
 import Foreign.C
 import Foreign.Ptr
-import Foreign.Storable
 import Foreign.Marshal.Array
 import Control.Concurrent.STM
 
@@ -73,13 +72,10 @@ ivyMain data_var source_var expr index = do
 myCallback:: TVar Double -> TVar String ->
              Int -> Ptr a -> Ptr a -> Int -> Ptr (CString) -> IO ()
 myCallback datapoint source index _ _ _ dataPtr = do
-    val <- peekArray 2 dataPtr
-    hPutStrLn stderr (show val)
+    val <- peekArray 2 dataPtr -- FIXME: better handle this
     src <- peekCString (val !! 0)
     str <- peekCString (val !! 1)
-    hPutStrLn stderr ("str = " ++ show str)
     let values = splitOn str
-    hPutStrLn stderr ("values = " ++ concat values)
     atomically $ writeTVar datapoint (read ( values !! index ) :: Double)
     atomically $ writeTVar source src
 

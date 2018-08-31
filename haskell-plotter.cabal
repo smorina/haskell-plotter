@@ -1,14 +1,14 @@
-name:                brick-devlunch
+name:                haskell-plotter
 version:             0.1
-synopsis:            Brick devlunch project
+synopsis:            Haskell plotter based on Brick
 license:             BSD3
 license-file:        LICENSE
-author:              Me <me@example.com>
+author:              Michal Pohradsky <mpodhradsky@galois.com>
 category:            Game
 build-type:          Simple
 cabal-version:       >=1.10
 
-executable brick-devlunch
+executable haskell-plotter
   hs-source-dirs:      programs, src
   main-is:             Main.hs
   ghc-options:         -threaded -Wall
