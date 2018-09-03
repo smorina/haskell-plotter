@@ -13,15 +13,15 @@ Simple terminal application based on Brick, plots Pprzlink message data from Ivy
 ```
 Haskell Ivy plotter
 
-Usage: brick-devlunch (-r|--rexepr EXPR) (-n|--name NAME) [-t|--period T]
-                      [-i|--field INDEX]
-  Plots data from Ivy bus in terminal. For example: brick-devlunch -r "ground
-  TELEMETRY_STATUS (.*)" -n ping_time -t 1.0 -i 12
+Usage: haskell-plotter (-m|--message MESSAGE) (-n|--name NAME) [-p|--period T]
+                       [-i|--field INDEX]
+  Plots data from Ivy bus in terminal. For example: brick-devlunch -m
+  TELEMETRY_STATUS -n ping_time -p 1.0 -i 11
 
 Available options:
-  -r,--rexepr EXPR         Regular expression for Ivy bus binding
+  -m,--message MESSAGE     Pprzlink message name
   -n,--name NAME           Display name of the variable
-  -t,--period T            Refresh period in seconds
+  -p,--period T            Refresh period in seconds
   -i,--field INDEX         Index of the variable in a given message
   -h,--help                Show this help text
 ```
@@ -54,9 +54,7 @@ ground TELEMETRY_STATUS 1 -1 0.019837 3979054 142328 705.0 1671 2 1669 0 716 25.
 </message>
 ```
 
-2. The regular expression we seek is `(.*) MESSAGE_NAME (.*)` where `MESSAGE_NAME=TELEMETRY_STATUS`.
-The first `(.*)` wildcards corresponds to the sender (`ground` in this case, or `AC_ID` in general). The sender is always
-*before* the message name. The second wildcard captures the message data. We use `-r "(.*) TELEMETRY_STATUS (.*)"`
+2. The message name is `TELEMETRY_STATUS`.
 3. Now we need to find the index of `ping_time`. Counting from top, we know that is is the 11-th field (we use 0-indexing).
 Hence `-i 11`
 4. Name of the variable is `ping_time`, hence `-n "ping time"`
