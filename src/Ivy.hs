@@ -8,7 +8,8 @@ import Foreign.Ptr
 import Foreign.Marshal.Array
 import Control.Concurrent.STM
 
-import System.IO (hPutStrLn, stderr)
+-- Only for displaying debug info
+--import System.IO (hPutStrLn, stderr)
 
 foreign import ccall "IvyStart" ivyStart :: CString -> IO ()
 foreign import ccall "IvyStop" _ivyStop :: IO ()
@@ -63,16 +64,15 @@ ivyMain data_var source_var expr index = do
     ivyInit app_name ready_msg nullPtr nullPtr nullPtr nullPtr
     addr <- newCString ""
     ivyStart addr
-    regexp <- newCString expr
+    regexp <- newCString ( "(.*) " ++ expr ++ " (.*)")
     cb <- createIvyCb $ myCallback data_var source_var index
     ivyBindMsg cb nullPtr regexp
     ivyMainLoop
 
--- TODO: make this more flexible?
 myCallback:: TVar Double -> TVar String ->
              Int -> Ptr a -> Ptr a -> Int -> Ptr (CString) -> IO ()
 myCallback datapoint source index _ _ _ dataPtr = do
-    val <- peekArray 2 dataPtr -- FIXME: better handle this
+    val <- peekArray 2 dataPtr
     src <- peekCString (val !! 0)
     str <- peekCString (val !! 1)
     let values = splitOn str

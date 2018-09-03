@@ -75,7 +75,7 @@ drawLabelX m period = str $ labelX m
         labelX n | n `mod` 10 /= 0 = labelX (n-1) ++ "-"
                  | otherwise = labelX (n- (length label)) ++ label
                     where
-                        label = show (round (nf * period))
+                        label = show (round (nf * period) :: Integer)
                         nf = (fromIntegral n :: Double)
 
 -- draw y axis label, interleaved with '|'
@@ -173,7 +173,7 @@ main = do
     chan <- newBChan 10
     delayVar <- atomically $ newTVar (round (period args) * 1000000)
     void $ forkIO $ control_thread delayVar chan
-    st <- initializeState delayVar (regexpr args) (name args) (field args)
+    st <- initializeState delayVar (message args) (name args) (field args)
     void $ customMain
         (mkVty defaultConfig) (Just chan) (app) (st)
         where
@@ -183,7 +183,7 @@ main = do
                 <> O.header "Haskell Ivy plotter" )
 
 data AppOptions = AppOptions
-  { regexpr :: String
+  { message :: String
   , name    :: String
   , period  :: Double
   , field   :: Int}
@@ -191,10 +191,10 @@ data AppOptions = AppOptions
 appOptions :: O.Parser AppOptions
 appOptions = AppOptions
       <$> O.strOption
-        ( O.long "rexepr"
-        <> O.short 'r'
-        <> O.metavar "EXPR"
-        <> O.help "Regular expression for Ivy bus binding" )
+        ( O.long "message"
+        <> O.short 'm'
+        <> O.metavar "MESSAGE"
+        <> O.help "Pprzlink message name" )
       <*> O.strOption
         ( O.long "name"
         <> O.short 'n'
@@ -202,7 +202,7 @@ appOptions = AppOptions
         <> O.help "Display name of the variable")
       <*> O.option O.auto
         ( O.long "period"
-        <> O.short 't'
+        <> O.short 'p'
         <> O.metavar "T"
         <> O.value 1.0
         <> O.help "Refresh period in seconds" )
@@ -215,5 +215,5 @@ appOptions = AppOptions
 
 descString :: String
 descString = "Plots data from Ivy bus in terminal. For example: "
-    ++ "brick-devlunch -r \"(.*) TELEMETRY_STATUS (.*)\""
-    ++ " -n ping_time -t 1.0 -i 11"
+    ++ "brick-devlunch -m TELEMETRY_STATUS"
+    ++ " -n ping_time -p 1.0 -i 11"
