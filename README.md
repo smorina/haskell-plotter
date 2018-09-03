@@ -61,7 +61,7 @@ Hence `-i 11`
 5. Optionally we can specify the update period in seconds (default is 1.0 s): `-t 5`
 6. Putting it all togerther we have: 
 ```
-$ cabal new-run haskell-plotter -- -m TELEMETRY_STATUS -n ping time -p 5.0 -i 11
+$ cabal new-run haskell-plotter -- -m TELEMETRY_STATUS -n ping_time -p 5.0 -i 11
 ```
 7. And voila, here is the output:
 ![ping_time](./data/example.png)
